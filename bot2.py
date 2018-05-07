@@ -37,7 +37,7 @@ class WebhookServer(object):
 # Хэндлер на все текстовые сообщения
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def echo_message(message):
-    bot.reply_to(message, message.text)
+    bot.reply_to(message, message)
 
 
 # Снимаем вебхук перед повторной установкой (избавляет от некоторых проблем)

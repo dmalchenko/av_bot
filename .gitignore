@@ -1,3 +1,5 @@
 .idea/
 __pycache__/
 /venv
+webhook_cert.pem
+webhook_pkey.pem
