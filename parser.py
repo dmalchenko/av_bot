@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import config
-import telebot
 import requests
+import telebot
+import config
+import time
 from bs4 import BeautifulSoup
+from models.db import filter_new_cars, save_cars, get_active_links
 
 
 def get_data(parse_url):
@@ -27,41 +29,64 @@ def get_data(parse_url):
     return r.text
 
 
-def get_last_link():
-    file = open('last.txt', 'r')
-    result = file.read()
-    file.close()
+def get_cars(html_for_parse):
+    soup = BeautifulSoup(html_for_parse, 'html.parser')
+    cars = []
+    for car_div in soup.find_all('div', 'listing-item'):
+        link = car_div.find('a').get('href')
+        id = link.split('/')[-1]
+        price_byn = car_div \
+            .find('div', {'class': 'listing-item-price'}) \
+            .find('strong') \
+            .getText() \
+            .replace(" ", "") \
+            .replace("Ñ\x80.", "")
+        if price_byn == '':
+            price_byn = 0
+        price_byn = str(int(price_byn))
+
+        price_usd = car_div.find('div', {'class': 'listing-item-price'}).find('small').getText().replace(" ", "")
+        if price_usd == '':
+            price_usd = 0
+        price_usd = str(int(price_usd))
+        cars.append({'av_id': int(id), 'link': link, 'price_usd': price_usd, 'price_byn': price_byn})
+    return cars
+
+
+def filter_cars(cars):
+    ids = []
+    for car in cars:
+        ids.append(car['av_id'])
+
+    new_ids = filter_new_cars(ids)
+
+    result = []
+    for car in cars:
+        if car['av_id'] in new_ids:
+            result.append(car)
+
     return result
 
 
-def set_last_link(value):
-    file = open('last.txt', 'w')
-    file.write(value)
-    file.close()
-
-
-def send_bot_message(link):
+def send_message(cars):
     bot = telebot.TeleBot(config.token)
-    bot.send_message(307796085, link)
-
-
-def get_cars(html_for_parse):
-    soup = BeautifulSoup(html_for_parse, 'html.parser')
-    last_link = get_last_link()
-    for car_div in soup.find_all('div', 'listing-item'):
-        link = car_div.find('a').get('href')
-        if last_link == link:
-            break
-        else:
-            send_bot_message(link)
-            set_last_link(link)
-            break
+    for car in cars:
+        bot.send_message(config.chat_id, car['price_usd'] + '$ ' + car['link'])
 
 
 if __name__ == '__main__':
-    url = 'https://cars.av.by/search?brand_id%5B0%5D=6&model_id%5B0%5D=15&year_from=&year_to=&currency=USD&price_from' \
-            '=&price_to=&body_id=&engine_type=2&engine_volume_min=&engine_volume_max=&driving_id=&mileage_min' \
-            '=&mileage_max=&region_id=&interior_material=&interior_color=&exchange=&search_time='
+    print('Start parser')
+    start_time = time.time()
 
-    html = get_data(url)
-    get_cars(html)
+    urls = get_active_links()
+    for url in urls:
+        html = get_data(url.link)
+        cars = get_cars(html)
+        cars = filter_cars(cars)
+        save_cars(cars)
+        send_message(cars)
+        print(cars)
+
+    run_time = time.time() - start_time
+    print('Stop parser')
+    print('Total time: ', round(run_time, 3), 'sec')
