@@ -1,3 +1,7 @@
+#create venv
+virtualenv venv
+source venv/bin/activate
+deactivate
 
 #save packages in requirements.txt
 pip3 freeze > requirements.txt

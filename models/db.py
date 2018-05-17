@@ -28,6 +28,6 @@ def filter_new_cars(ids):
 
 def save_cars(cars):
     for car in cars:
-        session.add(CarLink(car['link'], car['av_id'], car['price_usd'], car['price_byn']))
+        session.add(CarLink(car['link'], car['av_id'], car['price_usd'], car['price_byn'], car['image']))
     session.commit()
     session.close()

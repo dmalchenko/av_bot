@@ -13,13 +13,15 @@ class CarLink(Base):
     av_id = Column(Integer)
     price_usd = Column(Integer)
     price_byn = Column(Integer)
+    image = Column(String)
     created_at = Column(Integer)
     updated_at = Column(Integer)
 
-    def __init__(self, link, av_id, price_usd, price_byn):
+    def __init__(self, link, av_id, price_usd, price_byn, image):
         self.link = link
         self.av_id = av_id
         self.price_usd = price_usd
         self.price_byn = price_byn
+        self.image = image
         self.created_at = int(time.time())
         self.updated_at = int(time.time())

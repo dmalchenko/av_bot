@@ -33,6 +33,7 @@ def get_cars(html_for_parse):
     soup = BeautifulSoup(html_for_parse, 'html.parser')
     cars = []
     for car_div in soup.find_all('div', 'listing-item'):
+        image = car_div.find('img').get('src')
         link = car_div.find('a').get('href')
         id = link.split('/')[-1]
         price_byn = car_div \
@@ -49,7 +50,7 @@ def get_cars(html_for_parse):
         if price_usd == '':
             price_usd = 0
         price_usd = str(int(price_usd))
-        cars.append({'av_id': int(id), 'link': link, 'price_usd': price_usd, 'price_byn': price_byn})
+        cars.append({'av_id': int(id), 'link': link, 'price_usd': price_usd, 'price_byn': price_byn, 'image': image})
     return cars
 
 
